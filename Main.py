@@ -29,8 +29,8 @@ class Pixiv(object):
             'https': 'https://127.0.0.1:1080',
             'http': 'http://127.0.0.1:1080'
         }
-        self.pixiv_id = 'id',  # 2664504212@qq.com
-        self.password = 'psd',  # knxy0616
+        self.pixiv_id = '835437423@qq.com',  # 2664504212@qq.com
+        self.password = 'yjw3616807',  # knxy0616
         self.post_key = []
         self.return_to = 'https://www.pixiv.net/'
         self.html_path = 'D:\Software\pythonload\Re.html'
