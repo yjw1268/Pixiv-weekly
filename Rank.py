@@ -2,6 +2,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from bs4 import BeautifulSoup
 import time
+import sys
 
 se = requests.Session()  # 模拟登陆
 requests.adapters.DEFAULT_RETRIES = 15
@@ -14,15 +15,14 @@ class Pixiv(object):
     def __init__(self):
         self.base_url = 'https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index'
         self.login_url = 'https://accounts.pixiv.net/api/login?lang=zh'
-        self.modebase={
-            '1':'daily',
-            '2':'weekly',
-            '3':'monthly',
-            'R1':'daily_r18',
-            'R2':'weekly_r18',
-            'RG':'r18g',
+        self.modebase = {
+            '1': 'daily',
+            '2': 'weekly',
+            '3': 'monthly',
+            'R1': 'daily_r18',
+            'R2': 'weekly_r18',
+            'RG': 'r18g',
         }
-        self.mode=''
         self.target_url_1 = 'https://www.pixiv.net/ranking.php?mode='
         self.main_url = 'https://www.pixiv.net'
         self.headers = {
@@ -42,9 +42,7 @@ class Pixiv(object):
         self.password = 'yjw3616807',  # knxy0616
         self.post_key = []
         self.return_to = 'https://www.pixiv.net/'
-        self.html_path = 'D:\Software\pythonload\Re.html'
-        self.load_path = 'D:\Software\pythonload\\'  # 存放图片路径
-        self.get_number = 10
+        self.load_path = 'D:\Software\pythonload\pixiv_pic\\'  # 存放图片路径
 
     def login(self):
         post_key_xml = se.get(self.base_url, headers=self.headers).text
@@ -60,20 +58,49 @@ class Pixiv(object):
         se.post(self.login_url, data=data, headers=self.headers)
 
     def choosemode(self):
-        text=input("选择看图模式:")
-        self.mode=self.modebase[text]
-        return self.mode
+        text = input("请选择看图模式:")
+        mode = self.modebase[text]
+        return mode
 
-    def secontect(self,target_url):
-        s = se.get(self.target_url_1+target_url, proxies=self.proxies)  # https://www.pixiv.net/setting_user.php
+    def getnum(self, mode):
+        print(mode)
+        if mode == 'daily_r18' or mode == 'weekly_r18':
+            getnumber = input("你要几份色图？默认3份（输入1~5）")
+            if (getnumber.isdigit()):
+                if int(getnumber) > 5 or int(getnumber) < 1:
+                    print("输入数字不合法,程序自动结束")
+                    sys.exit()
+            elif (getnumber == ''):
+                getnumber = 3
+            else:
+                print("输入格式不合法,程序自动结束")
+                sys.exit()
+        elif mode == 'r18g':
+            print("你很变态居然看这个 就只给你1份")
+            getnumber = 1
+        else:
+            getnumber = input("你要看几张图？默认5份（输入1~8）")
+            if (getnumber.isdigit()):
+                if int(getnumber) > 5 or int(getnumber) < 1:
+                    print("输入数字不合法,程序自动结束")
+                    sys.exit()
+            elif (getnumber == ''):
+                getnumber = 5
+            else:
+                print("输入格式不合法,程序自动结束")
+                sys.exit()
+        return int(getnumber)
+
+    def secontect(self, target_url):
+        s = se.get(self.target_url_1 + target_url, proxies=self.proxies)  # https://www.pixiv.net/setting_user.php
         with open(self.load_path + 'Re.html', 'w', encoding='utf-8') as f:
             f.write(s.text)
 
-    def beautifulsoup(self):
+    def beautifulsoup(self, get_number):
         soup = BeautifulSoup(open(self.load_path + 'Re.html', 'r', encoding='utf-8'), features="html.parser")  # 初始化
         with open(self.load_path + 'Re_soup.html', 'w', encoding='utf-8') as f:
             f.write(soup.prettify())  # 保存soup以便check
-        title = soup.find_all("a", class_="title", limit=self.get_number)  # 寻找每周前self.get_number
+        title = soup.find_all("a", class_="title", limit=get_number)  # 寻找每周前get_number
         src_headers = self.headers
         for i in title:
             temp_url = self.main_url + '/' + i['href']
@@ -111,10 +138,15 @@ class Pixiv(object):
 
 if __name__ == '__main__':
     pixiv = Pixiv()
+    print("Checking permissions...")
     pixiv.login()
-    print("Loggin")
-    print(" '1':'每日Top'",'\n',"'2':'每周Top'",'\n',"'3':'每月Top',",'\n',"'R1':'每日色图Top'",'\n',"'R2':'每周色图Top'",'\n',"'RG':'r18g',")
-    pixiv.secontect(pixiv.choosemode())
-    print("Get page content")
-    pixiv.beautifulsoup()
+    # print("Loggin")
+    print("Welcome!")
+    print(" '1':'每日Top'", '\n', "'2':'每周Top'", '\n', "'3':'每月Top',", '\n', "'R1':'每日色图Top'", '\n', "'R2':'每周色图Top'",
+          '\n', "'RG':'r18g',")
+    mode = pixiv.choosemode()
+    print("Linking to the sever...")
+    pixiv.secontect(mode)
+    print("Getting page contents...")
+    pixiv.beautifulsoup(pixiv.getnum(mode))
     print("System Exit")

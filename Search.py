@@ -35,7 +35,7 @@ class Pixiv(object):
         self.password = 'yjw3616807',  # knxy0616
         self.post_key = []
         self.return_to = 'https://www.pixiv.net/'
-        self.load_path = 'D:\Software\pythonload\\'  # 存放图片路径
+        self.load_path = 'D:\Software\pythonload\pixiv_pic\\'  # 存放图片路径
         self.get_number = 10
         self.searchword = ''
 

@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="2d51f191-ef81-4ce8-acbe-999d16fd0999" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/Rank.py" beforeDir="false" afterPath="$PROJECT_DIR$/Rank.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Search.py" beforeDir="false" afterPath="$PROJECT_DIR$/Search.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -15,8 +16,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Search.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="499">
-              <caret line="118" selection-start-line="118" selection-end-line="118" />
+            <state relative-caret-position="264">
+              <caret line="35" column="26" lean-forward="true" selection-start-line="35" selection-start-column="26" selection-end-line="35" selection-end-column="26" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -27,8 +28,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Rank.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1034">
-              <caret line="115" column="83" selection-start-line="115" selection-start-column="83" selection-end-line="115" selection-end-column="83" />
+            <state relative-caret-position="-624">
+              <caret line="46" column="20" lean-forward="true" selection-start-line="46" selection-start-column="20" selection-end-line="46" selection-end-column="20" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -75,6 +76,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -86,7 +88,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -151,13 +152,14 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24966975" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.3286119" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32294616" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -179,8 +181,8 @@
     <entry file="file://$PROJECT_DIR$/Main.py" />
     <entry file="file://$PROJECT_DIR$/Search.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="499">
-          <caret line="118" selection-start-line="118" selection-end-line="118" />
+        <state relative-caret-position="264">
+          <caret line="35" column="26" lean-forward="true" selection-start-line="35" selection-start-column="26" selection-end-line="35" selection-end-column="26" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
@@ -189,8 +191,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Rank.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1034">
-          <caret line="115" column="83" selection-start-line="115" selection-start-column="83" selection-end-line="115" selection-end-column="83" />
+        <state relative-caret-position="-624">
+          <caret line="46" column="20" lean-forward="true" selection-start-line="46" selection-start-column="20" selection-end-line="46" selection-end-column="20" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
