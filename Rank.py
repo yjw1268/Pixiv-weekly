@@ -14,7 +14,16 @@ class Pixiv(object):
     def __init__(self):
         self.base_url = 'https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index'
         self.login_url = 'https://accounts.pixiv.net/api/login?lang=zh'
-        self.target_url = 'https://www.pixiv.net/ranking.php?mode=weekly'
+        self.modebase={
+            '1':'daily',
+            '2':'weekly',
+            '3':'monthly',
+            'R1':'daily_r18',
+            'R2':'weekly_r18',
+            'RG':'r18g',
+        }
+        self.mode=''
+        self.target_url_1 = 'https://www.pixiv.net/ranking.php?mode='
         self.main_url = 'https://www.pixiv.net'
         self.headers = {
             # 'Host': 'accounts.pixiv.net',
@@ -50,8 +59,13 @@ class Pixiv(object):
         }
         se.post(self.login_url, data=data, headers=self.headers)
 
-    def secontect(self):
-        s = se.get(self.target_url, proxies=self.proxies)  # https://www.pixiv.net/setting_user.php
+    def choosemode(self):
+        text=input("选择看图模式:")
+        self.mode=self.modebase[text]
+        return self.mode
+
+    def secontect(self,target_url):
+        s = se.get(self.target_url_1+target_url, proxies=self.proxies)  # https://www.pixiv.net/setting_user.php
         with open(self.load_path + 'Re.html', 'w', encoding='utf-8') as f:
             f.write(s.text)
 
@@ -99,7 +113,8 @@ if __name__ == '__main__':
     pixiv = Pixiv()
     pixiv.login()
     print("Loggin")
-    pixiv.secontect()
+    print(" '1':'每日Top'",'\n',"'2':'每周Top'",'\n',"'3':'每月Top',",'\n',"'R1':'每日色图Top'",'\n',"'R2':'每周色图Top'",'\n',"'RG':'r18g',")
+    pixiv.secontect(pixiv.choosemode())
     print("Get page content")
     pixiv.beautifulsoup()
     print("System Exit")
