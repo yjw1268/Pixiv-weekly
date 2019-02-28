@@ -34,7 +34,7 @@ class Pixiv(object):
         self.post_key = []
         self.return_to = 'https://www.pixiv.net/'
         self.html_path = 'D:\Software\pythonload\Re.html'
-        self.load_path = 'D:\Software\pythonload'  # 存放图片路径
+        self.load_path = 'D:\Software\pythonload\\'  # 存放图片路径
         self.get_number = 10
 
     def login(self):
@@ -51,22 +51,22 @@ class Pixiv(object):
         se.post(self.login_url, data=data, headers=self.headers)
 
     def secontect(self):
-        s = se.get(self.target_url,proxies=self.proxies)  # https://www.pixiv.net/setting_user.php
-        with open(self.html_path, 'w', encoding='utf-8') as f:
+        s = se.get(self.target_url, proxies=self.proxies)  # https://www.pixiv.net/setting_user.php
+        with open(self.load_path + 'Re.html', 'w', encoding='utf-8') as f:
             f.write(s.text)
 
     def beautifulsoup(self):
-        soup = BeautifulSoup(open(self.html_path, 'r', encoding='utf-8'), features="html.parser")  # 初始化
-        with open('D:\Software\pythonload\Re_soup.html', 'w', encoding='utf-8') as f:
+        soup = BeautifulSoup(open(self.load_path + 'Re.html', 'r', encoding='utf-8'), features="html.parser")  # 初始化
+        with open(self.load_path + 'Re_soup.html', 'w', encoding='utf-8') as f:
             f.write(soup.prettify())  # 保存soup以便check
         title = soup.find_all("a", class_="title", limit=self.get_number)  # 寻找每周前self.get_number
         src_headers = self.headers
         for i in title:
             temp_url = self.main_url + '/' + i['href']
             # print(temp_url)  # 详细页的url
-            temp_clear = se.get(temp_url, headers=src_headers,proxies=self.proxies)
+            temp_clear = se.get(temp_url, headers=src_headers, proxies=self.proxies)
             clear_soup = BeautifulSoup(temp_clear.text, features="html.parser")
-            with open('D:\\Software\\pythonload\\' + i.string + '.html', 'w', encoding='utf-8') as f:
+            with open(self.load_path + i.string + '.html', 'w', encoding='utf-8') as f:
                 f.write(clear_soup.prettify())
                 op = clear_soup.prettify().find('"original":"')
                 ed = clear_soup.prettify().find('},"tags')
@@ -76,8 +76,8 @@ class Pixiv(object):
                 # print(original_url)
                 adapt_url = original_url.replace('\/', '/')
                 print(adapt_url)
-                img = se.get(adapt_url, headers=src_headers,proxies=self.proxies)
-                with open('D:\\Software\\pythonload\\' + i.text + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
+                img = se.get(adapt_url, headers=src_headers, proxies=self.proxies)
+                with open(self.load_path + i.text + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
                     f.write(img.content)  # 保存图片
                 print("Finish")
             time.sleep(4)
@@ -89,7 +89,7 @@ class Pixiv(object):
         #     pic_dl_url = j["data-src"]
         #     print(pic_dl_url)  # 缩略图的url
         #     img = requests.get(pic_dl_url, headers=src_headers)  # 下载图片
-        #     with open('D:\\Software\\pythonload\\' + title[i].text + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
+        #     with open(self.load_path + title[i].text + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
         #         f.write(img.content)  # 保存图片
         #     i += 1
         # print("Read.")
@@ -102,3 +102,4 @@ if __name__ == '__main__':
     pixiv.secontect()
     print("Get page content")
     pixiv.beautifulsoup()
+    print("System Exit")
