@@ -38,6 +38,10 @@ class Pixiv(object):
         self.load_path = 'D:\Software\pythonload\pixiv_pic\\'  # 存放图片路径
         self.get_number = 10
         self.searchword = ''
+        self.mark = 0
+        self.pages = '&order=date_d&p='
+        self.page = 1
+        self.temp_number = 0
 
     def login(self):
         post_key_xml = se.get(self.base_url, headers=self.headers).text
@@ -54,13 +58,17 @@ class Pixiv(object):
 
     def search(self):
         self.searchword = input("Please input search words:")
+        self.mark = input("Please input the least marks:")
+        self.get_number = input("How many pictures do you want:(1~10)")
 
     def secontect(self):
-        s = se.get(self.search_url + self.searchword, proxies=self.proxies)  # https://www.pixiv.net/setting_user.php
+        s = se.get(self.search_url + self.searchword + self.pages + str(self.page),
+                   proxies=self.proxies)
         with open(self.load_path + 'Re.html', 'w', encoding='utf-8') as f:
             f.write(s.text)
+        self.page += 1
 
-    def beautifulsoup(self):
+    def sbeautifulsoup(self):
         soup = BeautifulSoup(open(self.load_path + 'Re.html', 'r', encoding='utf-8'), features="html.parser")  # 初始化
         with open(self.load_path + 'Re_soup.html', 'w', encoding='utf-8') as f:
             f.write(soup.prettify())  # 保存soup以便check
@@ -69,31 +77,33 @@ class Pixiv(object):
             # print(text)
             list = json.loads(text)
             src_headers = self.headers
-            temp_number = 0
             for i in list:
-                if temp_number >= self.get_number:
+                if self.temp_number >= int(self.get_number):
                     break
                 # print(i['url'])  # 缩略图地址
-                temp_url = self.target_url + i['illustId']
-                # print(temp_url)  # 详细页的url
-                temp_clear = se.get(temp_url, headers=src_headers, proxies=self.proxies)
-                clear_soup = BeautifulSoup(temp_clear.text, features="html.parser")
-                with open(self.load_path + i['illustTitle'] + '.html', 'w', encoding='utf-8') as f:
-                    f.write(clear_soup.prettify())
-                    op = clear_soup.prettify().find('"original":"')
-                    ed = clear_soup.prettify().find('},"tags')
-                    # print(op)
-                    # print(ed)
-                    original_url = clear_soup.prettify()[op + 12:ed - 1]
-                    # print(original_url)
-                    adapt_url = original_url.replace('\/', '/')
-                    print(adapt_url)
-                    img = se.get(adapt_url, headers=src_headers, proxies=self.proxies)
-                    with open(self.load_path + i['illustTitle'] + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
-                        f.write(img.content)  # 保存图片
-                    print("Finish")
-                    temp_number += 1
-                time.sleep(4)
+                print(i['bookmarkCount'])
+                if (i['bookmarkCount'] >= int(self.mark)):
+                    temp_url = self.target_url + i['illustId']
+                    # print(temp_url)  # 详细页的url
+                    temp_clear = se.get(temp_url, headers=src_headers, proxies=self.proxies)
+                    clear_soup = BeautifulSoup(temp_clear.text, features="html.parser")
+                    with open(self.load_path + i['illustTitle'] + '.html', 'w', encoding='utf-8') as f:
+                        f.write(clear_soup.prettify())
+                        op = clear_soup.prettify().find('"original":"')
+                        ed = clear_soup.prettify().find('},"tags')
+                        # print(op)
+                        # print(ed)
+                        original_url = clear_soup.prettify()[op + 12:ed - 1]
+                        # print(original_url)
+                        adapt_url = original_url.replace('\/', '/')
+                        print(adapt_url)
+                        img = se.get(adapt_url, headers=src_headers, proxies=self.proxies)
+                        with open(self.load_path + i['illustTitle'] + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
+                            f.write(img.content)  # 保存图片
+                        print("Finish")
+                        self.temp_number += 1
+                        time.sleep(2)
+                    time.sleep(1)
 
             # 获取缩略图
             # i = 0  # 命名需要
@@ -109,10 +119,16 @@ class Pixiv(object):
 
 if __name__ == '__main__':
     pixiv = Pixiv()
+    print("Checking permissions...")
     pixiv.login()
-    print("Loggin")
+    # print("Loggin")
+    print("Welcome!")
     pixiv.search()
-    pixiv.secontect()
-    print("Get page content")
-    pixiv.beautifulsoup()
+    print("Linking to the sever...")
+    while pixiv.temp_number < int(pixiv.get_number):
+        print("Getting content of page " + str(pixiv.page))
+        pixiv.secontect()
+        pixiv.sbeautifulsoup()
+        if (pixiv.page >= 10):
+            break
     print("System Exit")
