@@ -3,6 +3,7 @@ from requests.adapters import HTTPAdapter
 from bs4 import BeautifulSoup
 import time
 import json
+import sys,re
 
 se = requests.Session()  # 模拟登陆
 requests.adapters.DEFAULT_RETRIES = 15
@@ -58,8 +59,37 @@ class Pixiv(object):
 
     def search(self):
         self.searchword = input("Please input search words:")
-        self.mark = input("Please input the least marks:")
-        self.get_number = input("How many pictures do you want:(1~10)")
+        self.mark = input("Please input the least marks:(default 1000)")
+        if (self.mark.isdigit()):
+            if int(self.mark) > 20000 or int(self.mark) < 1:
+                print("输入数字不合法,程序自动结束")
+                sys.exit()
+        elif (self.mark == ''):
+            self.mark = 1000
+        else:
+            print("输入格式不合法,程序自动结束")
+            sys.exit()
+        self.get_number = input("How many pictures do you want:(1~10，default 3)")
+        if (self.get_number.isdigit()):
+            if int(self.get_number) > 10 or int(self.get_number) < 1:
+                print("输入数字不合法,程序自动结束")
+                sys.exit()
+        elif (self.get_number == ''):
+            self.get_number = 3
+        else:
+            print("输入格式不合法,程序自动结束")
+            sys.exit()
+        self.page = input("Start with page:(0~100)")
+        if (self.page.isdigit()):
+            if int(self.page) > 100 or int(self.page) < 1:
+                print("输入数字不合法,程序自动结束")
+                sys.exit()
+        elif (self.page == ''):
+            self.page = 1
+        else:
+            print("输入格式不合法,程序自动结束")
+            sys.exit()
+        self.page = int(self.page)
 
     def secontect(self):
         s = se.get(self.search_url + self.searchword + self.pages + str(self.page),
@@ -67,6 +97,11 @@ class Pixiv(object):
         with open(self.load_path + 'Re.html', 'w', encoding='utf-8') as f:
             f.write(s.text)
         self.page += 1
+
+    def validateTitle(self,title):
+        rstr = r"[\/\\\:\*\?\"\<\>\|]"  # '/ \ : * ? " < > |'
+        new_title = re.sub(rstr, "_", title)  # 替换为下划线
+        return new_title
 
     def sbeautifulsoup(self):
         soup = BeautifulSoup(open(self.load_path + 'Re.html', 'r', encoding='utf-8'), features="html.parser")  # 初始化
@@ -81,13 +116,15 @@ class Pixiv(object):
                 if self.temp_number >= int(self.get_number):
                     break
                 # print(i['url'])  # 缩略图地址
-                print(i['bookmarkCount'])
+                # print(i['bookmarkCount'])
                 if (i['bookmarkCount'] >= int(self.mark)):
+                    print(i['bookmarkCount'])
                     temp_url = self.target_url + i['illustId']
                     # print(temp_url)  # 详细页的url
                     temp_clear = se.get(temp_url, headers=src_headers, proxies=self.proxies)
                     clear_soup = BeautifulSoup(temp_clear.text, features="html.parser")
-                    with open(self.load_path + i['illustTitle'] + '.html', 'w', encoding='utf-8') as f:
+                    title = self.validateTitle(i['illustTitle'])
+                    with open(self.load_path + title + '.html', 'w', encoding='utf-8') as f:
                         f.write(clear_soup.prettify())
                         op = clear_soup.prettify().find('"original":"')
                         ed = clear_soup.prettify().find('},"tags')
@@ -96,11 +133,11 @@ class Pixiv(object):
                         original_url = clear_soup.prettify()[op + 12:ed - 1]
                         # print(original_url)
                         adapt_url = original_url.replace('\/', '/')
-                        print(adapt_url)
+                        # print(adapt_url)  # 高清图地址
                         img = se.get(adapt_url, headers=src_headers, proxies=self.proxies)
-                        with open(self.load_path + i['illustTitle'] + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
+                        with open(self.load_path + title + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
                             f.write(img.content)  # 保存图片
-                        print("Finish")
+                        print("Downloaded")
                         self.temp_number += 1
                         time.sleep(2)
                     time.sleep(1)
@@ -129,6 +166,6 @@ if __name__ == '__main__':
         print("Getting content of page " + str(pixiv.page))
         pixiv.secontect()
         pixiv.sbeautifulsoup()
-        if (pixiv.page >= 10):
+        if (pixiv.page >= 100):
             break
     print("System Exit")

@@ -63,7 +63,7 @@ class Pixiv(object):
         return mode
 
     def getnum(self, mode):
-        print(mode)
+        # print(mode)
         if mode == 'daily_r18' or mode == 'weekly_r18':
             getnumber = input("你要几份色图？默认3份（输入1~5）")
             if (getnumber.isdigit()):
