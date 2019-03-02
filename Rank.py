@@ -2,7 +2,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from bs4 import BeautifulSoup
 import time
-import sys
+import sys, re
 
 se = requests.Session()  # 模拟登陆
 requests.adapters.DEFAULT_RETRIES = 15
@@ -96,6 +96,11 @@ class Pixiv(object):
         with open(self.load_path + 'Re.html', 'w', encoding='utf-8') as f:
             f.write(s.text)
 
+    def validateTitle(self, title):
+        rstr = r"[\/\\\:\*\?\"\<\>\|]"  # '/ \ : * ? " < > |'
+        new_title = re.sub(rstr, "_", title)  # 替换为下划线
+        return new_title
+
     def beautifulsoup(self, get_number):
         soup = BeautifulSoup(open(self.load_path + 'Re.html', 'r', encoding='utf-8'), features="html.parser")  # 初始化
         with open(self.load_path + 'Re_soup.html', 'w', encoding='utf-8') as f:
@@ -107,7 +112,8 @@ class Pixiv(object):
             # print(temp_url)  # 详细页的url
             temp_clear = se.get(temp_url, headers=src_headers, proxies=self.proxies)
             clear_soup = BeautifulSoup(temp_clear.text, features="html.parser")
-            with open(self.load_path + i.string + '.html', 'w', encoding='utf-8') as f:
+            name = self.validateTitle(i.string)
+            with open(self.load_path + name + '.html', 'w', encoding='utf-8') as f:
                 f.write(clear_soup.prettify())
                 op = clear_soup.prettify().find('"original":"')
                 ed = clear_soup.prettify().find('},"tags')
@@ -118,7 +124,7 @@ class Pixiv(object):
                 adapt_url = original_url.replace('\/', '/')
                 print(adapt_url)
                 img = se.get(adapt_url, headers=src_headers, proxies=self.proxies)
-                with open(self.load_path + i.text + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
+                with open(self.load_path + name + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
                     f.write(img.content)  # 保存图片
                 print("Finish")
             time.sleep(4)
