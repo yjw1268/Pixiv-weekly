@@ -134,9 +134,11 @@ class Pixiv(object):
         # 关闭数据库连接
         # 图片处理
         pic_dl = soup.find_all("img", class_="_thumbnail ui-scroll-view", limit=get_number)
+        title = soup.find_all("a", class_="title", limit=get_number)
         i = 0
         for j in pic_dl:
             pic_dl_url = j["data-src"]  # 缩略图的url
+            pic_id = j["data-id"]  # 图片id
             img = requests.get(pic_dl_url, headers=self.headers)  # 下载图片
             # 命名格式：mode_date_number.jpg
             dlname = str(target_url) + '_' + time.strftime("%Y-%m-%d", time.localtime()) + '_' + str(i) + '.jpg'
@@ -144,11 +146,22 @@ class Pixiv(object):
                 f.write(img.content)  # 保存图片
                 # 输出存储url
                 print(pic_dl_url)
+                # 获取原图url
+                temp_url = self.main_url + '/' + title[i]['href']
+                # print(temp_url)  # 详细页的url
+                temp_clear = se.get(temp_url, headers=self.headers)
+                clear_soup = BeautifulSoup(temp_clear.text, features="html.parser")
+                name = self.validateTitle(title[i].string)  # 图片名称
+                op = clear_soup.prettify().find('"original":"')
+                ed = clear_soup.prettify().find('},"tags')
+                original_url = clear_soup.prettify()[op + 12:ed - 1]
+                adapt_url = original_url.replace('\/', '/')
+                # print(adapt_url)
                 local_url = 'http://study.imoe.club/Try/rank_pic/' + dlname
                 print(local_url)
                 print("<br>")
                 sql = "INSERT INTO pixiv_rank(raw_url, original_url,local_url,title, love) VALUES ('%s', '%s','%s','%s', '%s')" % \
-                      (str(pic_dl_url),0,str(local_url),1, 0)
+                      (str(pic_dl_url),adapt_url,str(local_url),name, 0)
                 # 执行sql语句
                 cursor.execute(sql)
                 # 执行sql语句
