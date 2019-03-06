@@ -97,7 +97,7 @@ class Pixiv(object):
         s = se.get(self.target_url_1 + str(target_url))
         soup = BeautifulSoup(s.text, features="html.parser")  # 初始化
         # 数据库操作
-        db = pymysql.connect("localhost", "root", "psd", "Study")
+        db = pymysql.connect("localhost", "root", "PlanetarAntimony", "Study")
         cursor = db.cursor()
         # 图片处理
         pic_dl = soup.find_all("img", class_="_thumbnail ui-scroll-view", limit=get_number)
