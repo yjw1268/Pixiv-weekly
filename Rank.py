@@ -38,8 +38,8 @@ class Pixiv(object):
             'https': 'https://127.0.0.1:1080',
             'http': 'http://127.0.0.1:1080'
         }
-        self.pixiv_id = '835437423@qq.com',  # 2664504212@qq.com
-        self.password = 'yjw3616807',  # knxy0616
+        self.pixiv_id = 'pixivid',  # 2664504212@qq.com
+        self.password = 'pixivpsd',  # knxy0616
         self.post_key = []
         self.return_to = 'https://www.pixiv.net/'
         self.load_path = 'D:\Software\pythonload\pixiv_pic\\'  # 存放图片路径
