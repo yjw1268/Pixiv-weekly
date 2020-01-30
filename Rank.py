@@ -1,7 +1,10 @@
 import requests
 from requests.adapters import HTTPAdapter
 from bs4 import BeautifulSoup
-import re
+import re, time
+import json
+import concurrent
+from concurrent.futures import ThreadPoolExecutor
 
 se = requests.Session()  # 模拟登陆
 requests.adapters.DEFAULT_RETRIES = 15
@@ -9,7 +12,7 @@ se.mount('http://', HTTPAdapter(max_retries=3))  # 重联
 se.mount('https://', HTTPAdapter(max_retries=3))
 
 
-class Pixiv(object):
+class Pixiv():
 
     def __init__(self):
         self.base_url = 'https://accounts.pixiv.net/login?return_to=https%3A%2F%2Fwww.pixiv.net%2F&lang=zh&source=pc&view_type=page'
@@ -55,50 +58,172 @@ class Pixiv(object):
 
     def rank(self):
         s = se.get(self.target_url_1 + self.modebase['1'],
-                   proxies=self.proxies)  # https://www.pixiv.net/setting_user.php
-        with open(self.load_path + 'Re.html', 'w', encoding='utf-8') as f:
-            f.write(s.text)
-
-    def getthumbnail(self):
-        soup = BeautifulSoup(open(self.load_path + 'Re.html', 'r', encoding='utf-8'), features="html.parser")  # 初始化
-        pic_dl = soup.find_all("img", class_="_thumbnail ui-scroll-view", limit=self.get_number)
-        i = 0  # 命名需要
+                   proxies=self.proxies)  # 修改modebase改变排行榜类型
+        # with open(self.load_path + 'Re.html', 'w', encoding='utf-8') as f:
+        #     f.write(s.text)
+        soup = BeautifulSoup(s.text, features="html.parser")  # 初始化
         # with open(self.load_path + 'Re_soup.html', 'w', encoding='utf-8') as f:
-        #     f.write(soup.prettify())  # 保存soup以便check
-        title = soup.find_all("a", class_="title", limit=self.get_number)  # 寻找每周前get_number
-        src_headers = self.headers
-        for j in pic_dl:
-            pic_dl_url = j["data-src"]
-            # print(pic_dl_url)  # 缩略图的url
-            img = requests.get(pic_dl_url, headers=src_headers)  # 下载图片
-            with open(self.load_path + title[i].text + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
-                f.write(img.content)  # 保存图片
-            i += 1
+        #     f.write(soup.prettify())
+        # soup = BeautifulSoup(open(self.load_path + 'Re.html', 'r', encoding='utf-8'), features="html.parser")  # 初始化
+        return soup
 
-    def getoriginal(self):
-        soup = BeautifulSoup(open(self.load_path + 'Re.html', 'r', encoding='utf-8'), features="html.parser")  # 初始化
-        adapt_url = 'https://pixiv.cat/'  # 利用反向代理接口获得图片
-        title = soup.find_all("a", class_="title", limit=self.get_number)  # 寻找每周前get_number
-        pic_dl = soup.find_all("img", class_="_thumbnail ui-scroll-view", limit=self.get_number)
-        j = 0
-        for i in title:
+    def getid(self, soup):
+        item = soup.find_all("div", class_="ranking-image-item", limit=self.get_number)
+        ids = []
+        for i in item:
+            ids.append(i.img["data-id"])
+        return ids
+
+    def getpagecount(self, soup):
+        item = soup.find_all("div", class_="ranking-image-item", limit=self.get_number)
+        types = []
+        for i in item:
+            try:
+                types.append(int(i.find(class_="page-count").text))
+            except:
+                types.append(1)
+        return types
+
+    def getdetailurl(self, soup):
+        item = soup.find_all("div", class_="ranking-image-item", limit=self.get_number)
+        detail_url = []
+        for i in item:
+            detail_url.append(i.a["href"])
+        return detail_url
+
+    def gettitle(self, soup):
+        item = soup.find_all("a", class_="title", limit=self.get_number)
+        titles = []
+        for i in item:
             name = self.validateTitle(i.string)
-            img = requests.get(adapt_url + pic_dl[j]["data-id"] + '.jpg')
-            if (img.status_code == 200):
-                print(img.url)
-                with open(self.load_path + name + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
-                    f.write(img.content)  # 保存图片
-            elif (img.status_code == 404):
-                img = requests.get(adapt_url + pic_dl[j]["data-id"] + '-1.jpg')
-                print(img.url)
-                with open(self.load_path + name + '.jpg', 'wb') as f:  # 图片要用b,对text要合法化处理
-                    f.write(img.content)  # 保存图片
-            j += 1
+            titles.append(name)
+        return titles
+
+    def getthumbnailurl(self, soup):
+        item = soup.find_all("div", class_="ranking-image-item", limit=self.get_number)
+        urls = []
+        for i in item:
+            urls.append(i.img["data-src"])
+        return urls
+
+    def getuserid(self, soup):
+        item = soup.find_all("div", class_="ranking-image-item", limit=self.get_number)
+        users = []
+        for i in item:
+            users.append(i.img["data-user-id"])
+        return users
+
+    def gettag(self, soup):
+        item = soup.find_all("div", class_="ranking-image-item", limit=self.get_number)
+        tags = []
+        for i in item:
+            tags.append(i.img["data-tags"])
+        return tags
+
+    def getusername(self, soup):
+        item = soup.find_all("a", class_="user-container ui-profile-popup", limit=self.get_number)
+        names = []
+        for i in item:
+            names.append(i["data-user_name"])
+        return names
+
+    def getuseravatar(self, soup):
+        item = soup.find_all("a", class_="user-container ui-profile-popup", limit=self.get_number)
+        urls = []
+        for i in item:
+            urls.append(i["data-profile_img"])
+        return urls
+
+    def download(self, url, title):
+        src_headers = self.headers
+        # print(title+url)
+        img = requests.get(url, headers=src_headers)  # 下载图片
+        with open(self.load_path + title + '.jpg', 'wb') as f:
+            f.write(img.content)  # 保存图片
+
+    def downloadcomic(self, id, type, title):
+        adapt_url = 'https://pixiv.cat/'  # 利用反向代理接口获得图片
+        for j in range(type):
+            url = adapt_url + id + '-' + str(j + 1) + '.jpg'
+            src_headers = self.headers
+            # print(title+url)
+            img = requests.get(url, headers=src_headers)  # 下载图片
+            with open(self.load_path + title + '-' + str(j + 1) + '.jpg', 'wb') as f:
+                f.write(img.content)  # 保存图片
+
+    def getdate(self, soup):
+        item = soup.find("ul", class_="sibling-items")
+        return item.a.string
+
+    def setjson(self, soup):
+        pages = self.getpagecount(soup)
+        titles = self.gettitle(soup)
+        detailurls = self.getdetailurl(soup)
+        ids = self.getid(soup)
+        tags = self.gettag(soup)
+        userids = self.getuserid(soup)
+        thumbnailurls = self.getthumbnailurl(soup)
+        useravatars = self.getuseravatar(soup)
+        usernames = self.getusername(soup)
+        date = self.getdate(soup)
+        result = [{'rankdate': date}, {'returnnumber': self.get_number}]
+        for i in range(0, self.get_number):
+            output = {
+                'rank': i + 1,
+                'title': titles[i],
+                'id': ids[i],
+                'thumbnailurl': thumbnailurls[i],
+                'page': pages[i],
+                'tag': tags[i],
+                'userid': userids[i],
+                'detailurl': detailurls[i],
+                'username': usernames[i],
+                'useravatar': useravatars[i],
+            }
+            result.append(output)
+        result.append({'returntime': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())})
+        result = json.dumps(result)
+        # print(result)
+        return result
+
+    def main(self):
+        print("Initializing...")
+        soup = self.rank()
+        thumbnailurls = self.getthumbnailurl(soup)
+        titles = self.gettitle(soup)
+        ids = self.getid(soup)
+        types = self.getpagecount(soup)
+        # download_all_thumbnail(thumbnailurls,titles) # 多线程下载所有缩略图
+        # download_thumbnail(thumbnailurls, titles)  # 单线程下载所有缩略图
+        download_original(ids, types, titles)  # 单线程下载原图
+        print("Done.")
+
+
+def download_all_thumbnail(url, title):  # 多线程下载所有缩略图
+    with concurrent.futures.ProcessPoolExecutor(max_workers=5) as exector:
+        for i in range(len(url)):
+            exector.submit(pixiv.download(url[i], title[i]))
+        print('done')
+
+
+def download_thumbnail(url, title):  # 单线程下载缩略图
+    for i in range(len(url)):
+        pixiv.download(url[i], title[i])
+    print('done')
+
+
+def download_original(id, type, title):
+    adapt_url = 'https://pixiv.cat/'  # 利用反向代理接口获得图片
+    for i in range(len(id)):
+        if (type[i] > 1):
+            pixiv.downloadcomic(id[i], type[i], title[i])
+        elif (type[i] == 1):
+            url = adapt_url + id[i] + '.jpg'
+            pixiv.download(url, title[i])
+        else:
+            raise TypeError
 
 
 if __name__ == '__main__':
     pixiv = Pixiv()
-    print("Initializing...")
-    pixiv.rank()
-    # pixiv.getthumbnail() # 获取缩略图
-    pixiv.getoriginal()  # 获取原图
+    pixiv.main()
