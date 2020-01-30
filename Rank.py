@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import requests
 from requests.adapters import HTTPAdapter
 from bs4 import BeautifulSoup
@@ -5,12 +6,14 @@ import re, time
 import json
 import concurrent
 from concurrent.futures import ThreadPoolExecutor
+from configparser import ConfigParser
 
 se = requests.Session()  # 模拟登陆
 requests.adapters.DEFAULT_RETRIES = 15
 se.mount('http://', HTTPAdapter(max_retries=3))  # 重联
 se.mount('https://', HTTPAdapter(max_retries=3))
-
+cp = ConfigParser()
+cp.read('config.conf',encoding='utf-8')
 
 class Pixiv():
 
@@ -34,18 +37,19 @@ class Pixiv():
             '3': 'monthly',
             'R1': 'daily_r18',
             'R2': 'weekly_r18',
-            'RG': 'r18g',
+            'RG': 'r18g'
         }
+        self.mode=cp.get("rank","mode")
         self.proxies = {
             'https': 'https://127.0.0.1:1080',
             'http': 'http://127.0.0.1:1080'
         }
-        self.pixiv_id = '835437423@qq.com',  # 2664504212@qq.com
-        self.password = '3616807',  # knxy0616
+        self.pixiv_id = cp.get("rank", "pixiv_id"),  # 2664504212@qq.com
+        self.password = cp.get("rank", "password"),  # knxy0616
         self.post_key = []
         self.return_to = 'https://www.pixiv.net/'
-        self.load_path = 'D:\Software\pythonload\pixiv_pic\\'  # 存放图片路径
-        self.get_number = 5
+        self.load_path = cp.get("rank", "download_path")  # 存放图片路径
+        self.get_number = int(cp.get("rank", "get_number"))
 
     def login(self):
         # 登录部分由于有谷歌人机检测，暂时无法使用
@@ -57,7 +61,7 @@ class Pixiv():
         return new_title
 
     def rank(self):
-        s = se.get(self.target_url_1 + self.modebase['1'],
+        s = se.get(self.target_url_1 + self.modebase[self.mode],
                    proxies=self.proxies)  # 修改modebase改变排行榜类型
         # with open(self.load_path + 'Re.html', 'w', encoding='utf-8') as f:
         #     f.write(s.text)
@@ -189,6 +193,7 @@ class Pixiv():
     def main(self):
         print("Initializing...")
         soup = self.rank()
+        print("获取信息如下：\n"+self.setjson(soup))
         thumbnailurls = self.getthumbnailurl(soup)
         titles = self.gettitle(soup)
         ids = self.getid(soup)
@@ -214,6 +219,7 @@ def download_thumbnail(url, title):  # 单线程下载缩略图
 
 def download_original(id, type, title):
     adapt_url = 'https://pixiv.cat/'  # 利用反向代理接口获得图片
+    print("正在下载原图中...")
     for i in range(len(id)):
         if (type[i] > 1):
             pixiv.downloadcomic(id[i], type[i], title[i])
