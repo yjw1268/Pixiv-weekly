@@ -4,9 +4,9 @@ from requests.adapters import HTTPAdapter
 from bs4 import BeautifulSoup
 import re, time
 import json
-import concurrent
-from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import Pool
 from configparser import ConfigParser
+
 
 se = requests.Session()  # 模拟登陆
 requests.adapters.DEFAULT_RETRIES = 15
@@ -198,16 +198,19 @@ class Pixiv():
         titles = self.gettitle(soup)
         ids = self.getid(soup)
         types = self.getpagecount(soup)
-        # download_all_thumbnail(thumbnailurls,titles) # 多线程下载所有缩略图
+        download_all_thumbnail(thumbnailurls,titles) # 多线程下载所有缩略图
         # download_thumbnail(thumbnailurls, titles)  # 单线程下载所有缩略图
-        download_original(ids, types, titles)  # 单线程下载原图
+        # download_original(ids, types, titles)  # 单线程下载原图
         print("Done.")
 
 
-def download_all_thumbnail(url, title):  # 多线程下载所有缩略图
-    with concurrent.futures.ProcessPoolExecutor(max_workers=5) as exector:
+def download_all_thumbnail(url, title):  # 多线程下载所有缩略图,在一些IDLE可能无法使用，命令行可用
+        p = Pool(8)
         for i in range(len(url)):
-            exector.submit(pixiv.download(url[i], title[i]))
+            print(url[i])
+            p.apply_async(pixiv.download, args=(url[i],title[i]))
+        p.close()
+        p.join()
         print('done')
 
 
@@ -233,3 +236,4 @@ def download_original(id, type, title):
 if __name__ == '__main__':
     pixiv = Pixiv()
     pixiv.main()
+    os.system("pause")
