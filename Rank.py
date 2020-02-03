@@ -198,9 +198,10 @@ class Pixiv():
         titles = self.gettitle(soup)
         ids = self.getid(soup)
         types = self.getpagecount(soup)
-        download_all_thumbnail(thumbnailurls,titles) # 多线程下载所有缩略图
+        # download_all_thumbnail(thumbnailurls,titles) # 多线程下载所有缩略图
         # download_thumbnail(thumbnailurls, titles)  # 单线程下载所有缩略图
         # download_original(ids, types, titles)  # 单线程下载原图
+        download_all_original(ids, types, titles) #多线程下载原图
         print("Done.")
 
 
@@ -233,7 +234,22 @@ def download_original(id, type, title):
             raise TypeError
 
 
+def download_all_original(id, type, title):  # 多线程下载所有原图,在一些IDLE可能无法使用，命令行可用
+    p = Pool(8)
+    adapt_url = 'https://pixiv.cat/'  # 利用反向代理接口获得图片
+    for i in range(len(id)):
+        if (type[i] > 1):
+            p.apply_async(pixiv.downloadcomic, args=(id[i], type[i], title[i]))
+        elif (type[i] == 1):
+            url = adapt_url + id[i] + '.jpg'
+            p.apply_async(pixiv.download, args=(url, title[i]))
+        else:
+            raise TypeError
+    p.close()
+    p.join()
+    print('done')
+
+
 if __name__ == '__main__':
     pixiv = Pixiv()
     pixiv.main()
-    os.system("pause")
